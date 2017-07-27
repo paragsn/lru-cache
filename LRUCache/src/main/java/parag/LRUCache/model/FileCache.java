@@ -1,5 +1,8 @@
 package parag.LRUCache.model;
 
+/**
+ * Model Class contains the Content of the Entries which will go in Cache
+ */
 public class FileCache {
 
     private String content;
