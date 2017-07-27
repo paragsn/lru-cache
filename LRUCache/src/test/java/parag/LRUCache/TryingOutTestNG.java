@@ -15,8 +15,11 @@ public class TryingOutTestNG {
     /**
      * @throws EntryNotFoundException if Key is not found in queue
      */
-    @Test(expectedExceptions = EntryNotFoundException.class)
+    @Test(expectedExceptions = EntryNotFoundException.class, threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
     public void testGETWhenQueueEmp() throws EntryNotFoundException {
+        
+        Long id = Thread.currentThread().getId();
+        System.out.println("Test method executing on thread with id: " + id);
 
         int maxSize = 20;
         ConcurrentHashMap<String, FileCache> map = new ConcurrentHashMap<>(maxSize);
@@ -29,9 +32,10 @@ public class TryingOutTestNG {
     /**
      * Checking order of queue after a get operation
      */
-    @Test
+    @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
     public void testGETWhenQueueNotEmp() throws EntryNotFoundException {
-
+        Long id = Thread.currentThread().getId();
+        System.out.println("Test method executing on thread with id: " + id);
         int maxSize = 20;
         ConcurrentHashMap<String, FileCache> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
@@ -46,9 +50,10 @@ public class TryingOutTestNG {
         assertEquals(queue.poll(), "key1");
     }
 
-    @Test
+    @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
     public void testOperationsAfterFirstInsert() throws EntryNotFoundException {
-
+        Long id = Thread.currentThread().getId();
+        System.out.println("Test method executing on thread with id: " + id);
         int maxSize = 20;
         String fileContent = "fileContent";
         ConcurrentHashMap<String, FileCache> map = new ConcurrentHashMap<>(maxSize);
@@ -64,7 +69,7 @@ public class TryingOutTestNG {
         assertEquals(cacheOperations.get("key1").getContent(), fileContent);
     }
     
-    @Test
+    @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
     public void testOperationsForMultipleInputs() throws EntryNotFoundException {
 
         int maxSize = 20;
@@ -99,7 +104,7 @@ public class TryingOutTestNG {
         assertEquals(queue.poll(), "key2");
     }
     
-    @Test
+    @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
     public void testIfSizeLimitReached() throws EntryNotFoundException {
 
         int maxSize = 3;
