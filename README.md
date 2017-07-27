@@ -1,2 +1,2 @@
 # lru-cache
-Implementation of LRU(Least recent used) cache
+Implementation of Thread Safe LRU(Least Recently Used) cache
