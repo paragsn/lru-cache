@@ -3,22 +3,23 @@ package parag.LRUCache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import parag.LRUCache.exception.EntryNotFoundException;
 import parag.LRUCache.model.FileCache;
 
 public class LRUDiskCacheOperations implements Operations<String, FileCache> {
 
     private final int maxSize;
-    private ConcurrentHashMap<String, FileCache> map;
-    private ConcurrentLinkedQueue<String> queue;
+    private final ConcurrentHashMap<String, FileCache> map;
+    private final ConcurrentLinkedQueue<String> queue;
 
-    public LRUDiskCacheOperations(int maxSize) {
+    public LRUDiskCacheOperations(int maxSize, ConcurrentHashMap<String, FileCache> map, ConcurrentLinkedQueue<String> queue) {
         this.maxSize = maxSize;
-        map = new ConcurrentHashMap<>(maxSize);
-        queue = new ConcurrentLinkedQueue<>();
+        this.map = map;
+        this.queue = queue;
     }
 
     @Override
-    public void put(final String key, final FileCache cachedFile) {
+    public synchronized void put(final String key, final FileCache cachedFile) {
         // Checking if the key is already present if yes, then remove from queue
         // We consider this key as least recently used and We will add it again to the tail of queue
         if (map.containsKey(key)) {
@@ -39,9 +40,9 @@ public class LRUDiskCacheOperations implements Operations<String, FileCache> {
     }
 
     @Override
-    public FileCache get(final String key) throws Exception {
+    public synchronized FileCache get(final String key) throws EntryNotFoundException {
         if (!queue.remove(key)) {
-            throw new Exception();
+            throw new EntryNotFoundException("No entry in cache.. Use put method to make an entry in cache");
         }
         FileCache file = map.get(key);
         queue.offer(key);
