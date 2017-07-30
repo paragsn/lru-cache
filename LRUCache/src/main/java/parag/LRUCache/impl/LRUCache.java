@@ -79,8 +79,12 @@ public class LRUCache implements Cache<String, String> {
             if (!queue.remove(key)) {
                 try {
                     // If key not found in memory then check on disk. Return null if not present
-                    return diskCache.get(key);
-                } catch (DeserializationException e) {
+                    String diskValue = diskCache.get(key);
+                    if (diskValue != null) {
+                        diskCache.put(key, diskValue);
+                    }
+                    return diskValue;
+                } catch (DeserializationException | SerializationException e) {
                     throw new RetrievalException("Error while GET operation", e);
                 }
             }
