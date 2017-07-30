@@ -1,7 +1,7 @@
 package parag.LRUCache;
 
-import parag.LRUCache.exception.DiskBackException;
-import parag.LRUCache.exception.EntryNotFoundException;
+import parag.LRUCache.exception.RetrievalException;
+import parag.LRUCache.exception.StoreException;
 
 public interface Cache<K, V> {
 
@@ -14,7 +14,7 @@ public interface Cache<K, V> {
      * @throws DiskBackException 
      * @throws Exception
      */
-    V get(K key) throws DiskBackException;
+    V get(K key) throws RetrievalException;
 
     /**
      * Stores the value into the cache, replacing an existing mapping if present.
@@ -23,6 +23,6 @@ public interface Cache<K, V> {
      * @param value
      * @throws DiskBackException
      */
-    void put(K key, V value) throws DiskBackException;
+    void put(K key, V value) throws StoreException;
 
 }

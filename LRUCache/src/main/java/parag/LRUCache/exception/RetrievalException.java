@@ -1,8 +1,8 @@
 package parag.LRUCache.exception;
 
-public class EntryNotFoundException extends Exception {
+public class RetrievalException extends Exception {
 
-    private static final long serialVersionUID = -8399277197516581918L;
+    private static final long serialVersionUID = 3020670648617043042L;
 
     /**
      * Constructor. Initializes this exception as a wrapper for another exception, with an explanatory message.
@@ -10,7 +10,7 @@ public class EntryNotFoundException extends Exception {
      * @param msg the explanatory message
      * @param wrappedException the exception being wrapped
      */
-    public EntryNotFoundException(String msg, Throwable wrappedException) {
+    public RetrievalException(String msg, Throwable wrappedException) {
         super(msg, wrappedException);
     }
 
@@ -19,7 +19,7 @@ public class EntryNotFoundException extends Exception {
      *
      * @param wrappedException the exception being wrapped
      */
-    public EntryNotFoundException(Throwable wrappedException) {
+    public RetrievalException(Throwable wrappedException) {
         super(wrappedException);
     }
 
@@ -28,7 +28,7 @@ public class EntryNotFoundException extends Exception {
      *
      * @param msg
      */
-    public EntryNotFoundException(String msg) {
+    public RetrievalException(String msg) {
         super(msg);
     }
 

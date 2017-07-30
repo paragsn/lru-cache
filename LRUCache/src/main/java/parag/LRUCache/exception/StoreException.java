@@ -1,6 +1,6 @@
 package parag.LRUCache.exception;
 
-public class DiskBackException extends Exception {
+public class StoreException extends Exception {
 
     private static final long serialVersionUID = 3020670648617043042L;
 
@@ -10,7 +10,7 @@ public class DiskBackException extends Exception {
      * @param msg the explanatory message
      * @param wrappedException the exception being wrapped
      */
-    public DiskBackException(String msg, Throwable wrappedException) {
+    public StoreException(String msg, Throwable wrappedException) {
         super(msg, wrappedException);
     }
 
@@ -19,7 +19,7 @@ public class DiskBackException extends Exception {
      *
      * @param wrappedException the exception being wrapped
      */
-    public DiskBackException(Throwable wrappedException) {
+    public StoreException(Throwable wrappedException) {
         super(wrappedException);
     }
 
@@ -28,7 +28,7 @@ public class DiskBackException extends Exception {
      *
      * @param msg
      */
-    public DiskBackException(String msg) {
+    public StoreException(String msg) {
         super(msg);
     }
 

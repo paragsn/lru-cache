@@ -7,8 +7,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.testng.annotations.Test;
 
-import parag.LRUCache.exception.DiskBackException;
-import parag.LRUCache.exception.EntryNotFoundException;
+import parag.LRUCache.DiskBacked.DiskCache;
+import parag.LRUCache.exception.RetrievalException;
+import parag.LRUCache.exception.StoreException;
+import parag.LRUCache.impl.LRUCache;
 
 /**
  * Test Class for {@link LRUCache}
@@ -18,30 +20,33 @@ public class TestLRUCache {
     /**
      *  I/P: Cache --> Empty 
      *  O/P: GET() --> null
+     * @throws RetrievalException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testGETWhenQueueEmp() throws EntryNotFoundException, DiskBackException {
+    public void testGETWhenQueueEmp() throws RetrievalException {
 
         int maxSize = 20;
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue);
+        DiskCache diskCache = new DiskCache("");
+        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
         assertEquals(null, cacheOperations.get(""));
     }
 
     /**
      * I/P: Cache --> Empty
      * O/P: Valid Insertions via PUT()
+     * @throws StoreException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testPUTWhenQueueEmp() throws DiskBackException {
+    public void testPUTWhenQueueEmp() throws StoreException {
 
         int maxSize = 20;
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue);
+        DiskCache diskCache = new DiskCache("");
+        
+        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
         cacheOperations.put("key1", "content1");
         cacheOperations.put("key2", "content2");
 
@@ -57,16 +62,18 @@ public class TestLRUCache {
     /**
      * I/P: Cache not Empty
      * O/P: Valid Keys present in Queue
+     * @throws RetrievalException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testGETWhenQueueNotEmp() throws EntryNotFoundException, DiskBackException {
+    public void testGETWhenQueueNotEmp() throws RetrievalException {
         int maxSize = 20;
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
         queue.offer("key1");
         queue.offer("key2");
         queue.offer("key3");
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue);
+        DiskCache diskCache = new DiskCache("");
+        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
         cacheOperations.get("key1");
 
         assertEquals(queue.poll(), "key2");
@@ -77,9 +84,11 @@ public class TestLRUCache {
     /**
      * I/P: Multiple Put() and Get() Operations
      * O/P: Valid entries in Map and Queue
+     * @throws StoreException 
+     * @throws RetrievalException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testOperationsForMultipleInputs() throws EntryNotFoundException, DiskBackException {
+    public void testOperationsForMultipleInputs() throws StoreException, RetrievalException {
 
         int maxSize = 20;
         String fileContent1 = "fileContent1";
@@ -87,7 +96,8 @@ public class TestLRUCache {
         String fileContent3 = "fileContent3";
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue);
+        DiskCache diskCache = new DiskCache("");
+        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
 
         // PUT
         cacheOperations.put("key1", fileContent1);
@@ -112,9 +122,11 @@ public class TestLRUCache {
     /**
      * I/P: Maximum size of Map Reached
      * O/P: Valid Removal of LRU entries
+     * @throws StoreException 
+     * @throws RetrievalException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testIfSizeLimitReached() throws EntryNotFoundException, DiskBackException {
+    public void testIfSizeLimitReached() throws StoreException, RetrievalException {
 
         int maxSize = 3;
         String fileContent1 = "fileContent1";
@@ -122,7 +134,10 @@ public class TestLRUCache {
         String fileContent3 = "fileContent3";
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue);
+        
+        DiskCache diskCache = new DiskCache("");
+        
+        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
 
         // PUT
         cacheOperations.put("key1", fileContent1);
