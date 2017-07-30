@@ -1,4 +1,4 @@
-package parag.LRUCache.DiskBacked;
+package parag.LRUCache.diskBacked;
 
 import java.io.File;
 import java.io.FileInputStream;

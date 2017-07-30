@@ -1,8 +1,8 @@
-package parag.LRUCache.DiskBacked;
+package parag.LRUCache.diskBacked;
 
 import java.io.IOException;
 
-import parag.LRUCache.DiskBacked.DiskStore;
+import parag.LRUCache.diskBacked.DiskStore;
 import parag.LRUCache.exception.DeserializationException;
 import parag.LRUCache.exception.SerializationException;
 

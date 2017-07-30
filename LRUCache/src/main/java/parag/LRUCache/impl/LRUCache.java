@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 import parag.LRUCache.Cache;
-import parag.LRUCache.DiskBacked.DiskCache;
+import parag.LRUCache.diskBacked.DiskCache;
 import parag.LRUCache.exception.DeserializationException;
 import parag.LRUCache.exception.RetrievalException;
 import parag.LRUCache.exception.SerializationException;

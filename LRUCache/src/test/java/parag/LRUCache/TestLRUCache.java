@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.testng.annotations.Test;
 
-import parag.LRUCache.DiskBacked.DiskCache;
+import parag.LRUCache.diskBacked.DiskCache;
 import parag.LRUCache.exception.RetrievalException;
 import parag.LRUCache.exception.StoreException;
 import parag.LRUCache.impl.LRUCache;
