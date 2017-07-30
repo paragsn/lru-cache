@@ -82,6 +82,7 @@ public class LRUCache implements Cache<String, String> {
                     String diskValue = diskCache.get(key);
                     if (diskValue != null) {
                         diskCache.put(key, diskValue);
+                        queue.offer(key);
                     }
                     return diskValue;
                 } catch (DeserializationException | SerializationException e) {
