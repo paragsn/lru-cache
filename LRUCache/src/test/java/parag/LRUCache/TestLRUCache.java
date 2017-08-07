@@ -2,8 +2,12 @@ package parag.LRUCache;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.testng.annotations.Test;
 
@@ -11,6 +15,7 @@ import parag.LRUCache.diskBacked.DiskCache;
 import parag.LRUCache.exception.RetrievalException;
 import parag.LRUCache.exception.StoreException;
 import parag.LRUCache.impl.LRUCache;
+import parag.LRUCache.lru.LRUManager;
 
 /**
  * Test Class for {@link LRUCache}
@@ -21,15 +26,20 @@ public class TestLRUCache {
      *  I/P: Cache --> Empty 
      *  O/P: GET() --> null
      * @throws RetrievalException 
+     * @throws StoreException 
+     * @throws IOException 
+     * @throws InterruptedException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testGETWhenQueueEmp() throws RetrievalException {
+    public void testGETWhenQueueEmp() throws RetrievalException, StoreException, IOException, InterruptedException {
 
         int maxSize = 20;
-        ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
+        Map<String, Integer> map = new HashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        DiskCache diskCache = new DiskCache("");
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
+        LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<>();
+        DiskCache<String, Integer> diskCache = new DiskCache<>("C:\\Users\\parag123\\Desktop\\Go\\");
+        Thread thread = new Thread(new LRUManager<>(queue, linkedBlockingQueue));
+        LRUCache<String, Integer> cacheOperations = new LRUCache<>(maxSize, map, queue, diskCache, linkedBlockingQueue, thread);
         assertEquals(null, cacheOperations.get(""));
     }
 
@@ -44,9 +54,10 @@ public class TestLRUCache {
         int maxSize = 20;
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        DiskCache diskCache = new DiskCache("");
-        
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
+        DiskCache<String, String> diskCache = new DiskCache<>("");
+        LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<>();
+        Thread thread = new Thread(new LRUManager<>(queue, linkedBlockingQueue));
+        LRUCache<String, String> cacheOperations = new LRUCache<>(maxSize, map, queue, diskCache, linkedBlockingQueue, thread);
         cacheOperations.put("key1", "content1");
         cacheOperations.put("key2", "content2");
 
@@ -63,19 +74,24 @@ public class TestLRUCache {
      * I/P: Cache not Empty
      * O/P: Valid Keys present in Queue
      * @throws RetrievalException 
+     * @throws InterruptedException 
+     * @throws StoreException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testGETWhenQueueNotEmp() throws RetrievalException {
+    public void testGETWhenQueueNotEmp() throws RetrievalException, InterruptedException, StoreException {
         int maxSize = 20;
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        queue.offer("key1");
-        queue.offer("key2");
-        queue.offer("key3");
-        DiskCache diskCache = new DiskCache("");
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
+        DiskCache<String, String> diskCache = new DiskCache<>("");
+        LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<>();
+        Thread thread = new Thread(new LRUManager<>(queue, linkedBlockingQueue));
+        LRUCache<String, String> cacheOperations = new LRUCache<>(maxSize, map, queue, diskCache, linkedBlockingQueue, thread);
+        cacheOperations.put("key1", "");
+        cacheOperations.put("key2", "");
+        cacheOperations.put("key3", "");
+        
         cacheOperations.get("key1");
-
+        Thread.sleep(100);
         assertEquals(queue.poll(), "key2");
         assertEquals(queue.poll(), "key3");
         assertEquals(queue.poll(), "key1");
@@ -86,9 +102,10 @@ public class TestLRUCache {
      * O/P: Valid entries in Map and Queue
      * @throws StoreException 
      * @throws RetrievalException 
+     * @throws InterruptedException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testOperationsForMultipleInputs() throws StoreException, RetrievalException {
+    public void testOperationsForMultipleInputs() throws StoreException, RetrievalException, InterruptedException {
 
         int maxSize = 20;
         String fileContent1 = "fileContent1";
@@ -96,9 +113,10 @@ public class TestLRUCache {
         String fileContent3 = "fileContent3";
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-        DiskCache diskCache = new DiskCache("");
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
-
+        DiskCache<String, String> diskCache = new DiskCache<>("");
+        LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<>();
+        Thread thread = new Thread(new LRUManager<>(queue, linkedBlockingQueue));
+        LRUCache<String, String> cacheOperations = new LRUCache<>(maxSize, map, queue, diskCache, linkedBlockingQueue, thread);
         // PUT
         cacheOperations.put("key1", fileContent1);
         cacheOperations.put("key2", fileContent2);
@@ -112,7 +130,7 @@ public class TestLRUCache {
 
         // GET
         cacheOperations.get("key2");
-
+        Thread.sleep(10);
         // Check Queue
         assertEquals(queue.poll(), "key1");
         assertEquals(queue.poll(), "key3");
@@ -124,9 +142,10 @@ public class TestLRUCache {
      * O/P: Valid Removal of LRU entries
      * @throws StoreException 
      * @throws RetrievalException 
+     * @throws InterruptedException 
      */
     @Test(threadPoolSize = 3, invocationCount = 6, timeOut = 1000)
-    public void testIfSizeLimitReached() throws StoreException, RetrievalException {
+    public void testIfSizeLimitReached() throws StoreException, RetrievalException, InterruptedException {
 
         int maxSize = 3;
         String fileContent1 = "fileContent1";
@@ -135,10 +154,12 @@ public class TestLRUCache {
         ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>(maxSize);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
         
-        DiskCache diskCache = new DiskCache("");
+        DiskCache<String, String> diskCache = new DiskCache<>("");
         
-        LRUCache cacheOperations = new LRUCache(maxSize, map, queue, diskCache);
-
+        LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<>();
+        Thread thread = new Thread(new LRUManager<>(queue, linkedBlockingQueue));
+        LRUCache<String, String> cacheOperations = new LRUCache<>(maxSize, map, queue, diskCache, linkedBlockingQueue, thread);
+        
         // PUT
         cacheOperations.put("key1", fileContent1);
         cacheOperations.put("key2", fileContent2);
@@ -157,6 +178,7 @@ public class TestLRUCache {
         String fileCache4 = "fileContents4";
         cacheOperations.put("Key4", fileCache4);
 
+        Thread.sleep(10);
         // We did GET on key2 and inserted key4 so key3 was least recently used key
         assertEquals(queue.peek(), "key3");
 
@@ -180,7 +202,8 @@ public class TestLRUCache {
         assertEquals(map.get("key5"), "fileContents5");
         assertEquals(map.get("key6"), "fileContents6");
         assertEquals(map.get("key7"), "fileContents7");
-
+        
+        Thread.sleep(1);
         // Queue
         assertEquals(queue.poll(), "key7");
         assertEquals(queue.poll(), "key6");

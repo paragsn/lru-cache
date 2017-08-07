@@ -2,6 +2,7 @@ package parag.LRUCache.impl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 import parag.LRUCache.Cache;
@@ -14,14 +15,15 @@ import parag.LRUCache.exception.StoreException;
 /**
  * Tread Safe Disk Backed LRU Cache Implementation
  */
-public class LRUCache implements Cache<String, String> {
+public class LRUCache<K, V> implements Cache<K, V> {
 
     private final ReentrantLock lock = new ReentrantLock();
 
     private final Integer maxSize;
-    private final Map<String, String> map;
-    private final ConcurrentLinkedQueue<String> queue;
-    private final DiskCache diskCache;
+    private final Map<K, V> map;
+    private final ConcurrentLinkedQueue<K> queue;
+    private final DiskCache<K, V> diskCache;
+    private final LinkedBlockingQueue<K> linkedBlockingQueue;
 
     /**
      * Constructor
@@ -30,18 +32,33 @@ public class LRUCache implements Cache<String, String> {
      * @param map
      * @param queue
      */
-    public LRUCache(Integer maxSize, Map<String, String> map, ConcurrentLinkedQueue<String> queue, DiskCache diskLRUCache) {
+    public LRUCache(Integer maxSize, Map<K, V> map, ConcurrentLinkedQueue<K> queue, DiskCache<K, V> diskLRUCache,
+            LinkedBlockingQueue<K> linkedBlockingQueue, Thread thread) {
         this.maxSize = maxSize;
         this.map = map;
         this.queue = queue;
         this.diskCache = diskLRUCache;
+        this.linkedBlockingQueue = linkedBlockingQueue;
+        startLRUManagerThread(thread);
+    }
+
+    /**
+     * This is async operation to reArrange the keys in queue This is done to improve the performance of cache mainly in get Operation
+     */
+    public void startLRUManagerThread(Thread thread) {
+        if (!thread.isAlive()) {
+            thread.start();
+        }
     }
 
     /* (non-Javadoc)
      * @see parag.LRUCache.Operations#put(java.lang.Object, java.lang.Object)
      */
     @Override
-    public void put(final String key, final String cachedFile) throws StoreException {
+    public void put(final K key, final V cachedFile) throws StoreException {
+        if (key == null) {
+            return;
+        }
         lock.tryLock();
         try {
             // While loop to truncate the size the map i.e delete LRU entries if size of map goes beyond max size
@@ -53,14 +70,14 @@ public class LRUCache implements Cache<String, String> {
                 }
             }
 
-            String oldFile = map.put(key, cachedFile);
+            V oldFile = map.put(key, cachedFile);
 
             /**
              * If Old value for key is not null then Key was already present. We are reinserting the key again to tail. We assume it to be
              * recently used. If old value is null then add new entry
              */
             if (null != oldFile) {
-                reInsertKey(key);
+                linkedBlockingQueue.offer(key);
             } else {
                 queue.offer(key);
             }
@@ -73,27 +90,35 @@ public class LRUCache implements Cache<String, String> {
      * @see parag.LRUCache.Operations#get(java.lang.Object)
      */
     @Override
-    public String get(final String key) throws RetrievalException {
+    public V get(final K key) throws RetrievalException {
+        if (key == null) {
+            return null;
+        }
         lock.lock();
+        V value = null;
         try {
-            if (!queue.remove(key)) {
+            value = map.get(key);
+
+            if (value != null) {
+                linkedBlockingQueue.offer(key);
+            } else {
                 try {
                     // If key not found in memory then check on disk. Return null if not present
-                    String diskValue = diskCache.get(key);
+                    V diskValue = diskCache.get(key);
                     if (diskValue != null) {
-                        diskCache.put(key, diskValue);
+                        put(key, diskValue);
                         queue.offer(key);
+                        diskCache.remove(key);
                     }
                     return diskValue;
-                } catch (DeserializationException | SerializationException e) {
+                } catch (DeserializationException | StoreException e) {
                     throw new RetrievalException("Error while GET operation", e);
                 }
             }
-            queue.offer(key);
         } finally {
             lock.unlock();
         }
-        return map.get(key);
+        return value;
     }
 
     /**
@@ -102,9 +127,9 @@ public class LRUCache implements Cache<String, String> {
      * @throws SerializationException
      */
     private void removeLRUEntry() throws SerializationException {
-        String leastUsedKey = queue.poll();
+        K leastUsedKey = queue.poll();
         if (null != leastUsedKey) {
-            String value = map.get(leastUsedKey);
+            V value = map.get(leastUsedKey);
             // Adding entry to disk first and then removing from memory
             if (null != value) {
                 diskCache.put(leastUsedKey, value);
@@ -113,15 +138,4 @@ public class LRUCache implements Cache<String, String> {
         }
     }
 
-    /**
-     * Removing key and inserting again to tail Method to be used for key which is recently used
-     * 
-     * @param key
-     */
-    private void reInsertKey(String key) {
-        // Remove
-        queue.remove(key);
-        // Insert to tail
-        queue.offer(key);
-    }
 }

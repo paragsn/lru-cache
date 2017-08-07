@@ -21,12 +21,10 @@ public class DiskStore {
      * @param filePath
      * @throws IOException
      */
-    public static void serialize(Object object, String filePath) throws IOException {
-        FileOutputStream fos = new FileOutputStream(filePath);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(object);
-
-        fos.close();
+    public static <K, V> void serialize(V object, String filePath) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(filePath); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(object);
+        }
     }
 
     /**
@@ -37,17 +35,15 @@ public class DiskStore {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static Object deserialize(String filePath) throws IOException, ClassNotFoundException {
-        InputStream fis = null;
-        try {
-            fis = new FileInputStream(filePath);
+    @SuppressWarnings("unchecked")
+    public static <K, V> V deserialize(String filePath) throws IOException, ClassNotFoundException {
+        V object = null;
+        try (InputStream fis = new FileInputStream(filePath); ObjectInputStream ois = new ObjectInputStream(fis)) {
+            object =  (V) ois.readObject();
         } catch (FileNotFoundException e) {
-            return null;
+            return object;
         }
 
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        Object object = ois.readObject();
-        ois.close();
         return object;
     }
 
@@ -59,7 +55,6 @@ public class DiskStore {
      */
     public static boolean deleteFile(String fileName) {
         File file = new File(fileName);
-
         return file.delete();
     }
 
